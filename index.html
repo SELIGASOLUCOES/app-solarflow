@@ -3,384 +3,533 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SolarFlow Business v13</title>
+    <title>SolarFlow Platinum v25</title>
     <meta name="theme-color" content="#0f172a">
     <link rel="manifest" href="manifest.json">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --primary: #f59e0b; --text: #f8fafc; --muted: #94a3b8; }
-        body { font-family: 'Manrope', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; }
+        :root {
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.7);
+            --glass: rgba(255, 255, 255, 0.05);
+            --primary: #f59e0b; /* Amber/Gold */
+            --accent: #38bdf8;  /* Sky Blue */
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
 
-        .app-header { background: rgba(15,23,42,0.95); padding: 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); }
-        .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at top left, #1e293b, #0f172a);
+            color: var(--text); margin: 0; padding-bottom: 100px; min-height: 100vh;
+        }
+
+        /* HEADER & CONFIG */
+        .app-header {
+            background: rgba(15, 23, 42, 0.95); padding: 20px; position: sticky; top: 0; z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(12px);
+        }
+        .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        .brand span { color: var(--primary); }
         
-        .stepper { display: flex; justify-content: center; padding: 15px 0; gap: 10px; }
-        .step-bar { width: 30px; height: 4px; background: #334155; border-radius: 2px; transition: 0.4s; }
-        .step-bar.active { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+        .btn-config { background: rgba(255,255,255,0.1); border: 1px solid var(--muted); color: var(--primary); width: 40px; height: 40px; border-radius: 10px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+        .btn-config:hover { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
 
-        .screen { display: none; max-width: 500px; margin: 0 auto; padding: 0 20px; animation: fadeUp 0.4s ease; }
+        /* MODAL DE EMPRESA */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); z-index: 999; backdrop-filter: blur(5px); }
+        .modal-content { background: #1e293b; margin: 10% auto; padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; border: 1px solid var(--primary); box-shadow: 0 0 40px rgba(245, 158, 11, 0.2); }
+        .modal h3 { color: var(--primary); margin-top: 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+
+        /* STEPPER */
+        .stepper { display: flex; justify-content: center; padding: 25px 0; gap: 10px; }
+        .dot { width: 10px; height: 10px; background: var(--muted); border-radius: 50%; transition: 0.3s; opacity: 0.3; }
+        .dot.active { background: var(--primary); transform: scale(1.5); opacity: 1; box-shadow: 0 0 10px var(--primary); }
+
+        /* SCREENS */
+        .screen { display: none; max-width: 600px; margin: 0 auto; padding: 0 20px; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
         .screen.active { display: block; }
-        @keyframes fadeUp { from {opacity:0; transform:translateY(15px);} to {opacity:1; transform:translateY(0);} }
+        @keyframes slideUp { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
 
-        .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #334155; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-        .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 10px; color: var(--primary); }
-        .card-header h3 { margin: 0; font-size: 1rem; color: var(--text); }
+        /* CARDS */
+        .card {
+            background: var(--card); border-radius: 20px; padding: 25px; margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+        .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem; }
 
-        label { display: block; font-size: 0.7rem; color: var(--muted); margin-bottom: 5px; font-weight: 700; text-transform: uppercase; }
-        input, select { width: 100%; padding: 14px; background: #020617; border: 1px solid #334155; border-radius: 10px; color: white; font-size: 1rem; box-sizing: border-box; transition: 0.3s; }
-        input:focus, select:focus { border-color: var(--primary); outline: none; }
+        /* INPUTS */
+        label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
+        input, select {
+            width: 100%; padding: 16px; background: rgba(0,0,0,0.3); border: 1px solid #334155;
+            border-radius: 12px; color: white; font-size: 1rem; font-family: inherit; box-sizing: border-box;
+            transition: 0.3s; outline: none;
+        }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2); background: rgba(255,255,255,0.05); }
 
-        .btn-gps { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); position: relative; overflow: hidden; }
-        .btn-gps.loading { opacity: 0.8; pointer-events: none; }
+        /* BOTÕES */
+        .btn {
+            width: 100%; padding: 18px; border-radius: 14px; border: none; font-weight: 700; font-size: 1rem;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px;
+            margin-top: 15px; transition: transform 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .btn:active { transform: scale(0.98); }
         
-        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
-        .btn-primary { background: var(--primary); color: #0f172a; }
-        .btn-outline { background: transparent; border: 1px solid #475569; color: var(--muted); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), #d97706); color: #0f172a; box-shadow: 0 8px 20px -5px rgba(245, 158, 11, 0.4); }
+        .btn-gps { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; margin-bottom: 20px; box-shadow: 0 8px 20px -5px rgba(59, 130, 246, 0.4); }
+        .btn-gps.loading { opacity: 0.7; pointer-events: none; }
+        .btn-save { background: #10b981; color: #022c22; margin-top: 20px; }
+        .btn-outline { background: transparent; border: 1px solid var(--muted); color: var(--muted); }
         .btn-pdf { background: #ef4444; color: white; }
         .btn-zap { background: #22c55e; color: white; }
 
-        .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .dash-item { background: #0f172a; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #334155; }
-        .dash-item small { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; display: block; }
-        .dash-item big { font-size: 1.2rem; color: var(--text); font-weight: 800; display: block; margin-top: 5px; }
+        /* DASHBOARD */
+        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .kpi-box { background: rgba(255,255,255,0.03); padding: 20px 10px; border-radius: 16px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .kpi-box small { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .kpi-box big { font-size: 1.3rem; color: white; font-weight: 800; }
+        .highlight { border-color: var(--primary); background: rgba(245, 158, 11, 0.1); }
+        .highlight big { color: var(--primary); }
+
+        .footer { text-align: center; margin-top: 40px; font-size: 0.75rem; color: var(--muted); opacity: 0.7; }
         
-        .footer-brand { text-align: center; margin-top: 30px; font-size: 0.7rem; color: #475569; }
-        .footer-brand a { color: var(--primary); text-decoration: none; }
+        /* CANVAS OCULTO (Para gerar PDF) */
+        #hiddenContainer { position: absolute; left: -9999px; top: -9999px; }
     </style>
 </head>
 <body>
 
     <div class="app-header">
-        <div class="brand"><h1>SolarFlow <span>Business</span></h1></div>
-        <div style="font-size:0.8rem; color:var(--muted);">v13.0</div>
+        <div class="brand"><h1>SOLAR<span>FLOW</span></h1></div>
+        <button class="btn-settings" onclick="openConfig()"><i class="fas fa-cog"></i></button>
+    </div>
+
+    <div id="configModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-building"></i> Dados da Empresa</h3>
+            <p style="color:var(--muted); font-size:0.85rem; margin-bottom:20px;">Preencha para sair na capa do PDF e WhatsApp.</p>
+            
+            <label>Nome Fantasia / Razão Social</label>
+            <input type="text" id="cfgNome" placeholder="Ex: EcoSolar Engenharia">
+            
+            <label style="margin-top:10px;">CNPJ (Opcional)</label>
+            <input type="text" id="cfgCnpj" placeholder="00.000.000/0001-00">
+            
+            <label style="margin-top:10px;">Telefone de Contato</label>
+            <input type="tel" id="cfgTel" placeholder="(XX) 9XXXX-XXXX">
+            
+            <label style="margin-top:10px;">Cidade Sede</label>
+            <input type="text" id="cfgCity" placeholder="Ex: Gurupi - TO">
+
+            <button class="btn btn-save" onclick="saveConfig()">Salvar Dados</button>
+            <button class="btn btn-outline" onclick="closeConfig()">Fechar</button>
+        </div>
     </div>
 
     <div class="stepper">
-        <div class="step-bar active" id="sb1"></div>
-        <div class="step-bar" id="sb2"></div>
-        <div class="step-bar" id="sb3"></div>
+        <div class="dot active" id="d1"></div>
+        <div class="dot" id="d2"></div>
+        <div class="dot" id="d3"></div>
     </div>
 
     <div class="screen active" id="t1">
         <div class="card">
-            <div class="card-header"><i class="fas fa-map-marker-alt"></i><h3>Localização</h3></div>
+            <div class="card-header"><i class="fas fa-globe"></i> Localização do Projeto</div>
             
-            <button class="btn-gps" id="btnGps" onclick="ativarGPS()">
-                <i class="fas fa-satellite"></i> Detectar Cidade e HSP
+            <button class="btn btn-gps" id="btnGps" onclick="ativarGPS()">
+                <i class="fas fa-crosshairs"></i> Satélite & NASA
             </button>
 
-            <div style="margin-bottom: 15px;">
-                <label>Cidade:</label>
+            <div class="input-group">
+                <label>Cidade (Editável)</label>
                 <input type="text" id="cidadeInput" placeholder="Aguardando GPS...">
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
                 <div>
                     <label>Estado</label>
-                    <select id="uf" onchange="setManual()">
-                        <option value="">UF...</option>
-                    </select>
+                    <select id="uf" onchange="setManual()"><option value="">UF</option></select>
                 </div>
                 <div>
-                    <label>HSP (NASA)</label>
-                    <input type="number" id="hsp" step="0.1" placeholder="Auto">
+                    <label>HSP (Sol)</label>
+                    <input type="number" id="hsp" step="0.1" placeholder="Auto" style="color:var(--primary); font-weight:bold;">
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <label>Nome do Cliente</label>
-            <input type="text" id="cliente" placeholder="Ex: João Silva">
-            <label style="margin-top:10px;">Tarifa de Energia (R$)</label>
+            <div class="card-header"><i class="fas fa-user"></i> Dados do Cliente</div>
+            <input type="text" id="cliente" placeholder="Nome Completo">
+            <label style="margin-top:15px;">Tarifa de Energia (R$)</label>
             <input type="number" id="tarifa" value="1.05" step="0.01">
         </div>
 
-        <button class="btn btn-primary" onclick="nav(2)">Próximo <i class="fas fa-arrow-right"></i></button>
+        <button class="btn btn-primary" onclick="nav(2)">Continuar</button>
     </div>
 
     <div class="screen" id="t2">
         <div class="card">
-            <div class="card-header"><i class="fas fa-bolt"></i><h3>Engenharia</h3></div>
+            <div class="card-header"><i class="fas fa-plug"></i> Dimensionamento</div>
+            <label>Média de Consumo (kWh)</label>
+            <input type="number" id="consumo" placeholder="Ex: 800" inputmode="numeric">
             
-            <label>Consumo Médio (kWh/mês)</label>
-            <input type="number" id="consumo" placeholder="Ex: 600" inputmode="numeric">
-
-            <label style="margin-top:15px;">Potência do Módulo (W)</label>
+            <label style="margin-top:15px;">Modelo do Painel</label>
             <select id="painel">
                 <option value="550">550 W (Padrão)</option>
                 <option value="575">575 W (N-Type)</option>
                 <option value="600">600 W (Alta Potência)</option>
-                <option value="450">450 W</option>
+                <option value="450">450 W (Econômico)</option>
             </select>
-
-            <label style="margin-top:15px;">Investimento (R$)</label>
-            <input type="number" id="investimento" placeholder="Vazio = Estimativa Automática">
         </div>
 
+        <div class="card" style="border-color: var(--primary); background: rgba(245, 158, 11, 0.05);">
+            <div class="card-header"><i class="fas fa-hand-holding-usd"></i> Proposta Comercial</div>
+            <label style="color:var(--primary);">Valor Total do Sistema (R$)</label>
+            <input type="number" id="investimento" placeholder="Deixe vazio para estimativa" style="color:var(--primary); font-weight:900; font-size:1.2rem;">
+            
+            <label style="margin-top:15px;">Forma de Pagamento</label>
+            <input type="text" id="pgto" placeholder="Ex: Entrada + Financiamento">
+        </div>
+        
         <div style="display:flex; gap:10px;">
             <button class="btn btn-outline" onclick="nav(1)">Voltar</button>
-            <button class="btn btn-primary" onclick="calcular()">Calcular</button>
+            <button class="btn btn-primary" onclick="calcular()">Gerar Proposta</button>
         </div>
     </div>
 
     <div class="screen" id="t3">
-        <div class="dash-grid">
-            <div class="dash-item">
-                <small>Potência</small>
-                <big id="res-kwp">--</big>
-            </div>
-            <div class="dash-item">
-                <small>Placas</small>
-                <big id="res-placas">--</big>
-            </div>
-            <div class="dash-item">
-                <small>Geração Mês</small>
-                <big id="res-geracao">--</big>
-            </div>
-            <div class="dash-item" style="border:1px solid var(--primary);">
-                <small style="color:var(--primary)">Economia Anual</small>
-                <big id="res-economia" style="color:var(--primary)">--</big>
-            </div>
+        <div class="kpi-grid">
+            <div class="kpi-box"><small>Potência</small><big id="res-kwp">--</big></div>
+            <div class="kpi-box"><small>Placas</small><big id="res-placas">--</big></div>
+            <div class="kpi-box"><small>Geração</small><big id="res-geracao">--</big></div>
+            <div class="kpi-box highlight"><small>Economia/Ano</small><big id="res-economia">--</big></div>
         </div>
 
-        <div class="card" style="margin-top:15px; padding:10px;">
-            <canvas id="chartROI" height="200"></canvas>
+        <div class="card" style="margin-top:20px; padding:15px;">
+            <label style="text-align:center; margin-bottom:10px;">Retorno do Investimento (25 Anos)</label>
+            <div style="height:200px;"><canvas id="chartScreen"></canvas></div>
         </div>
 
         <div class="card">
             <label>WhatsApp do Cliente</label>
             <input type="tel" id="fone" placeholder="(XX) 9XXXX-XXXX">
-            
-            <button class="btn btn-pdf" onclick="gerarRelatorioPDF()">
-                <i class="fas fa-file-pdf"></i> Baixar Relatório PDF
-            </button>
-            <button class="btn btn-zap" onclick="enviarZap()">
-                <i class="fab fa-whatsapp"></i> Enviar Proposta Profissional
-            </button>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <button class="btn btn-pdf" onclick="gerarPDFPlatinum()"><i class="fas fa-file-pdf"></i> Baixar PDF</button>
+                <button class="btn btn-zap" onclick="enviarZapPlatinum()"><i class="fab fa-whatsapp"></i> Enviar Zap</button>
+            </div>
             <button class="btn btn-outline" onclick="nav(1)">Novo Projeto</button>
         </div>
 
-        <div class="footer-brand" id="signature-block">
-            App Licenciado: <a href="https://solarflowpro.com.br/" id="auth-link">SolarFlow Pro</a>
-            <div id="secret-key" style="display:none;">solarflowpro.com.br</div>
+        <div class="footer">
+            Licenciado para <a href="https://solarflowpro.com.br/" style="color:var(--primary); text-decoration:none;">SolarFlow Pro</a>
+            <div id="key" style="display:none;">solarflowpro.com.br</div>
         </div>
     </div>
 
+    <div id="hiddenContainer">
+        <canvas id="chartPDF_Gen" width="800" height="400"></canvas>
+        <canvas id="chartPDF_ROI" width="800" height="400"></canvas>
+    </div>
+
     <script>
-        // DADOS
-        const mapaEstados = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
+        // DADOS BASE
         const dbHSP = {"AC":4.5,"AL":5.3,"AP":5.1,"AM":4.6,"BA":5.5,"CE":5.7,"DF":5.3,"ES":5.1,"GO":5.3,"MA":5.2,"MT":5.1,"MS":5.1,"MG":5.2,"PA":4.9,"PB":5.6,"PR":4.4,"PE":5.5,"PI":5.7,"RJ":4.9,"RN":5.8,"RS":4.3,"RO":4.7,"RR":4.9,"SC":4.1,"SP":4.7,"SE":5.3,"TO":5.3};
-        let P = { lat: 0, lon: 0, fonte: "Manual" };
-        let chart = null;
+        const mapUF = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
+        
+        let P = { lat:0, lon:0, fonte:"Manual" };
+        let C = { nome:"Sua Empresa Solar", tel:"", city:"", cnpj:"" }; // Dados da Empresa
+        let screenChart, pdfChartGen, pdfChartROI;
 
         window.onload = () => {
             const s = document.getElementById('uf');
-            Object.keys(dbHSP).sort().forEach(u => { let o = document.createElement('option'); o.value=u; o.text=u; s.add(o); });
+            Object.keys(dbHSP).sort().forEach(u => { let o=document.createElement('option'); o.value=u; o.text=u; s.add(o); });
+            let saved = localStorage.getItem('sf_prestige_cfg');
+            if(saved) C = JSON.parse(saved);
         };
 
+        // --- CONFIG EMPRESA ---
+        function openConfig() {
+            document.getElementById('configModal').style.display = 'block';
+            document.getElementById('cfgNome').value = C.nome;
+            document.getElementById('cfgCnpj').value = C.cnpj;
+            document.getElementById('cfgTel').value = C.tel;
+            document.getElementById('cfgCity').value = C.city;
+        }
+        function closeConfig() { document.getElementById('configModal').style.display = 'none'; }
+        function saveConfig() {
+            C.nome = document.getElementById('cfgNome').value || "Sua Empresa";
+            C.cnpj = document.getElementById('cfgCnpj').value;
+            C.tel = document.getElementById('cfgTel').value;
+            C.city = document.getElementById('cfgCity').value;
+            localStorage.setItem('sf_prestige_cfg', JSON.stringify(C));
+            closeConfig();
+        }
+
+        // NAV
         function nav(n) {
-            document.querySelectorAll('.screen').forEach(x => x.classList.remove('active'));
-            document.querySelectorAll('.step-bar').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+            document.querySelectorAll('.dot').forEach(x=>x.classList.remove('active'));
             document.getElementById('t'+n).classList.add('active');
-            for(let i=1; i<=n; i++) document.getElementById('sb'+i).classList.add('active');
+            for(let i=1; i<=n; i++) document.getElementById('d'+i).classList.add('active');
         }
 
         // GPS
         function ativarGPS() {
             const btn = document.getElementById('btnGps');
-            btn.classList.add('loading');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando Satélite...';
-            
-            if(!navigator.geolocation) { alert("GPS bloqueado."); btn.innerHTML='Tentar Novamente'; btn.classList.remove('loading'); return; }
-
+            btn.classList.add('loading'); btn.innerHTML = 'Conectando...';
+            if(!navigator.geolocation) { alert("GPS indisponível."); btn.classList.remove('loading'); return; }
             navigator.geolocation.getCurrentPosition(async (pos) => {
-                P.lat = pos.coords.latitude;
-                P.lon = pos.coords.longitude;
-                P.fonte = "Satélite/NASA";
-
+                P.lat=pos.coords.latitude; P.lon=pos.coords.longitude; P.fonte="Satélite";
                 try {
-                    const resGeo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${P.lat}&lon=${P.lon}`);
-                    const dataGeo = await resGeo.json();
-                    const city = dataGeo.address.city || dataGeo.address.town || dataGeo.address.village || dataGeo.address.municipality || "";
-                    document.getElementById('cidadeInput').value = city;
-                    const ufSigla = mapaEstados[dataGeo.address.state] || "TO";
-                    document.getElementById('uf').value = ufSigla;
-                } catch(e) { console.log("Erro Geo"); }
-
+                    const r1 = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${P.lat}&lon=${P.lon}`);
+                    const d1 = await r1.json();
+                    document.getElementById('cidadeInput').value = d1.address.city || d1.address.town || "";
+                    document.getElementById('uf').value = mapUF[d1.address.state] || "TO";
+                } catch(e){}
                 try {
-                    const resNasa = await fetch(`https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=ALLSKY_SFC_SW_DWN&community=RE&longitude=${P.lon}&latitude=${P.lat}&format=JSON`);
-                    const dataNasa = await resNasa.json();
-                    const hsp = dataNasa.properties.parameter.ALLSKY_SFC_SW_DWN.ANN;
-                    document.getElementById('hsp').value = hsp.toFixed(2);
-                    btn.classList.remove('loading');
-                    btn.style.background = "#22c55e";
-                    btn.innerHTML = `<i class="fas fa-check-circle"></i> Sucesso: ${hsp.toFixed(2)} HSP`;
-                } catch(e) {
-                    alert("Erro NASA."); btn.innerHTML = 'Tentar Manual'; btn.classList.remove('loading');
-                }
-            }, () => { alert("Erro GPS."); btn.innerHTML = 'Tentar Manual'; btn.classList.remove('loading'); });
+                    const r2 = await fetch(`https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=ALLSKY_SFC_SW_DWN&community=RE&longitude=${P.lon}&latitude=${P.lat}&format=JSON`);
+                    const d2 = await r2.json();
+                    document.getElementById('hsp').value = d2.properties.parameter.ALLSKY_SFC_SW_DWN.ANN.toFixed(2);
+                    btn.style.background="#10b981"; btn.innerHTML="Localização Confirmada"; btn.classList.remove('loading');
+                } catch(e){ btn.innerHTML="Erro NASA"; btn.classList.remove('loading'); }
+            }, ()=>{ alert("Erro GPS"); btn.classList.remove('loading'); });
         }
+        function setManual() { let u=document.getElementById('uf').value; if(dbHSP[u]) document.getElementById('hsp').value=dbHSP[u]; }
 
-        function setManual() {
-            let u = document.getElementById('uf').value;
-            if(dbHSP[u]) { document.getElementById('hsp').value = dbHSP[u]; P.fonte = "Manual"; }
-        }
-
-        // CALCULO
+        // CÁLCULO
         function calcular() {
-            const key = document.getElementById('secret-key');
-            const link = document.getElementById('auth-link');
-            if(!key || !link || !link.href.includes('solarflowpro.com.br')) { alert("Erro Assinatura"); return; }
+            const key = document.getElementById('key');
+            if(!key || key.innerText!=='solarflowpro.com.br') return;
 
-            P.cliente = document.getElementById('cliente').value || "Cliente";
-            P.cidade = document.getElementById('cidadeInput').value || "Local";
-            P.uf = document.getElementById('uf').value || "";
-            P.consumo = parseFloat(document.getElementById('consumo').value);
+            P.cli = document.getElementById('cliente').value || "Cliente";
+            P.cid = document.getElementById('cidadeInput').value || "Local";
+            P.uf = document.getElementById('uf').value;
+            P.con = parseFloat(document.getElementById('consumo').value);
             P.hsp = parseFloat(document.getElementById('hsp').value);
-            P.painel = parseInt(document.getElementById('painel').value);
-            P.tarifa = parseFloat(document.getElementById('tarifa').value);
+            P.mod = parseInt(document.getElementById('painel').value);
+            P.tar = parseFloat(document.getElementById('tarifa').value);
             let inv = parseFloat(document.getElementById('investimento').value);
+            P.pgto = document.getElementById('pgto').value || "A combinar";
 
-            if(!P.consumo || !P.hsp) { alert("Preencha dados."); return; }
+            if(!P.con || !P.hsp) { alert("Preencha dados."); return; }
 
             const PR = 0.75;
-            const energiaDia = (P.consumo / 30) * 1000;
-            const potW = energiaDia / (P.hsp * PR);
-            P.placas = Math.ceil(potW / P.painel);
-            P.kwp = (P.placas * P.painel) / 1000;
-            P.geracaoMedia = P.kwp * P.hsp * 30 * PR;
-            P.economiaAnual = P.geracaoMedia * P.tarifa * 12;
-            P.invest = inv ? inv : (P.kwp * 2900 < 5000 ? 5000 : P.kwp * 2900);
-            P.geracaoAnualTotal = P.geracaoMedia * 12;
+            const potW = (P.con/30*1000)/(P.hsp*PR);
+            P.placas = Math.ceil(potW/P.mod);
+            P.kwp = (P.placas*P.mod)/1000;
+            
+            const dias=[31,28,31,30,31,30,31,31,30,31,30,31];
+            P.meses=[]; let tot=0;
+            dias.forEach(d=>{ let g=P.kwp*P.hsp*d*PR; P.meses.push(g); tot+=g; });
+            
+            P.ger = tot/12;
+            P.ecoAno = tot*P.tar;
+            P.inv = inv ? inv : (P.kwp*2900<5000?5000:P.kwp*2900);
 
             document.getElementById('res-kwp').innerText = P.kwp.toFixed(2) + " kWp";
             document.getElementById('res-placas').innerText = P.placas + " un";
-            document.getElementById('res-geracao').innerText = P.geracaoMedia.toFixed(0) + " kWh";
-            document.getElementById('res-economia').innerText = (P.economiaAnual).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+            document.getElementById('res-geracao').innerText = P.ger.toFixed(0) + " kWh";
+            document.getElementById('res-economia').innerText = (P.ecoAno).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
             nav(3);
-            renderChart();
+            renderScreenChart();
         }
 
-        function renderChart() {
-            const ctx = document.getElementById('chartROI').getContext('2d');
-            if(chart) chart.destroy();
-            let d=[], l=[], s=-P.invest;
-            for(let i=0; i<=10; i++) { l.push(i); d.push(s); s+=(P.economiaAnual*Math.pow(1.06,i)); }
-            chart = new Chart(ctx, {
-                type:'line', data:{labels:l, datasets:[{label:'Retorno R$', data:d, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.1)', fill:true}]},
-                options:{plugins:{legend:{display:false}}, scales:{x:{grid:{color:'#334155'}}, y:{grid:{color:'#334155'}}}}
+        function renderScreenChart() {
+            const ctx = document.getElementById('chartScreen').getContext('2d');
+            if(screenChart) screenChart.destroy();
+            let d=[], l=[], s=-P.inv;
+            for(let i=0; i<=25; i++) { l.push(i); d.push(s); s+=(P.ecoAno*Math.pow(1.06,i)); }
+            
+            let grad = ctx.createLinearGradient(0,0,0,400);
+            grad.addColorStop(0, 'rgba(245, 158, 11, 0.5)'); grad.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+
+            screenChart = new Chart(ctx, {
+                type:'line', data:{labels:l, datasets:[{label:'Saldo R$', data:d, borderColor:'#f59e0b', backgroundColor:grad, fill:true, pointRadius:0}]},
+                options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{color:'rgba(255,255,255,0.1)'}}, y:{grid:{color:'rgba(255,255,255,0.1)'}}}}
             });
         }
 
-        function gerarRelatorioPDF() {
+        // --- PDF PLATINUM (COM GRÁFICO ROI E CAPA) ---
+        async function gerarPDFPlatinum() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const orange = [245, 158, 11];
-            const dark = [15, 23, 42];
+            const navy = [15, 23, 42];
+            const gold = [245, 158, 11];
 
-            doc.setFillColor(...dark); doc.rect(0,0,210,40,'F');
-            doc.setTextColor(255); doc.setFontSize(22); doc.setFont("helvetica","bold");
-            doc.text("ESTUDO DE VIABILIDADE", 15, 20);
+            // 1. GERAR IMAGEM GRÁFICO 1 (BARRAS - GERAÇÃO)
+            const cvsGen = document.getElementById('chartPDF_Gen');
+            if(pdfChartGen) pdfChartGen.destroy();
+            pdfChartGen = new Chart(cvsGen, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+                    datasets: [
+                        { type:'line', label:'Consumo', data:Array(12).fill(P.con), borderColor:'#ef4444', borderWidth:3, pointRadius:0 },
+                        { type:'bar', label:'Geração', data:P.meses, backgroundColor:'#38bdf8' }
+                    ]
+                },
+                options: { animation: false, scales:{y:{beginAtZero:true}} }
+            });
+
+            // 2. GERAR IMAGEM GRÁFICO 2 (LINHA - ROI 25 ANOS)
+            const cvsROI = document.getElementById('chartPDF_ROI');
+            if(pdfChartROI) pdfChartROI.destroy();
+            let d=[], l=[], s=-P.inv;
+            for(let i=0; i<=25; i++) { l.push(i); d.push(s); s+=(P.ecoAno*Math.pow(1.06,i)); }
+            
+            pdfChartROI = new Chart(cvsROI, {
+                type: 'line',
+                data: {
+                    labels: l,
+                    datasets: [{
+                        label: 'Retorno Financeiro (R$)',
+                        data: d,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                        fill: true, pointRadius: 0, borderWidth: 4
+                    }]
+                },
+                options: { animation: false, scales:{y:{beginAtZero:false}} }
+            });
+
+            // Aguarda renderização
+            await new Promise(r => setTimeout(r, 600));
+            const imgGen = cvsGen.toDataURL("image/png", 1.0);
+            const imgROI = cvsROI.toDataURL("image/png", 1.0);
+
+            // --- PÁGINA 1: CAPA ---
+            doc.setFillColor(...navy); doc.rect(0,0,210,50,'F');
+            
+            // Header com Dados da Empresa
+            doc.setTextColor(255); doc.setFontSize(24); doc.setFont("helvetica","bold");
+            doc.text(C.nome.toUpperCase(), 15, 22);
+            
             doc.setFontSize(10); doc.setFont("helvetica","normal");
-            doc.text("SolarFlow Engineering - Proposta Técnica", 15, 28);
-            doc.text(`Data: ${new Date().toLocaleDateString()}`, 160, 20);
+            let sub = ""; if(C.city) sub+=C.city; if(C.tel) sub+= " | " + C.tel;
+            doc.text(sub, 15, 32);
+            if(C.cnpj) doc.text("CNPJ: "+C.cnpj, 15, 38);
 
-            doc.setTextColor(0); doc.setFontSize(12);
-            doc.text(`Cliente: ${P.cliente}`, 15, 55);
-            let localTexto = (P.cidade && P.cidade !== "Aguardando GPS...") ? `${P.cidade} - ${P.uf}` : `Estado: ${P.uf}`;
-            doc.text(`Local: ${localTexto}`, 15, 62);
-            doc.setFontSize(10); doc.setTextColor(100);
-            doc.text(`Fonte: ${P.fonte} | HSP: ${P.hsp.toFixed(2)}`, 15, 68);
+            doc.setDrawColor(...gold); doc.setLineWidth(1); doc.line(15, 42, 100, 42);
+            
+            // Titulo Proposta
+            doc.setTextColor(200); 
+            doc.text(`PROPOSTA TÉCNICA E COMERCIAL`, 160, 22, {align:'center'});
+            doc.text(`DATA: ${new Date().toLocaleDateString()}`, 160, 28, {align:'center'});
 
+            // Resumo Hero
+            let y = 70;
+            doc.setFillColor(248, 250, 252); doc.roundedRect(15, y, 180, 35, 3, 3, 'F');
+            doc.setTextColor(...navy); doc.setFontSize(11); doc.setFont("helvetica","bold");
+            doc.text("RESUMO DO SISTEMA", 20, y+8);
+            
+            doc.setFontSize(9); doc.setTextColor(100); doc.text("POTÊNCIA", 20, y+20);
+            doc.setFontSize(14); doc.setTextColor(...navy); doc.text(`${P.kwp.toFixed(2)} kWp`, 20, y+28);
+
+            doc.setFontSize(9); doc.setTextColor(100); doc.text("GERAÇÃO MENSAL", 70, y+20);
+            doc.setFontSize(14); doc.setTextColor(...navy); doc.text(`${P.ger.toFixed(0)} kWh`, 70, y+28);
+
+            doc.setFontSize(9); doc.setTextColor(100); doc.text("ECONOMIA ANUAL", 130, y+20);
+            doc.setFontSize(14); doc.setTextColor(...gold); doc.text(P.ecoAno.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}), 130, y+28);
+
+            // Cliente
+            doc.setTextColor(0); doc.setFontSize(11); doc.setFont("helvetica","bold");
+            doc.text(`CLIENTE: ${P.cli}`, 15, 125);
+            doc.setFontSize(10); doc.setFont("helvetica","normal");
+            let local = P.cid ? `${P.cid} - ${P.uf}` : P.uf;
+            doc.text(`Local: ${local}`, 15, 132);
+            doc.text(`Fonte: ${P.fonte} | HSP: ${P.hsp.toFixed(2)}`, 15, 138);
+
+            // Tabela Técnica
             doc.autoTable({
-                startY: 75,
-                head: [['Parâmetro', 'Resultado']],
+                startY: 145,
+                head: [['Módulos', 'Qtd', 'Área', 'Monitoramento']],
+                body: [[`${P.painel}W`, `${P.placas} un`, `${(P.placas*2.2).toFixed(1)} m²`, `WiFi App`]],
+                theme:'grid', headStyles:{fillColor:navy}
+            });
+
+            // Gráfico Geração (Barras)
+            let gy = doc.lastAutoTable.finalY + 10;
+            doc.text("Balanço Energético (Geração x Consumo)", 15, gy);
+            doc.addImage(imgGen, 'PNG', 15, gy+5, 180, 80);
+
+            // Rodapé Pag 1
+            const ph = doc.internal.pageSize.height;
+            doc.setFontSize(8); doc.setTextColor(150);
+            doc.text(`Proposta gerada por ${C.nome}`, 15, ph-10);
+
+            // --- PÁGINA 2: FINANCEIRO E ROI ---
+            doc.addPage();
+            doc.setFillColor(...navy); doc.rect(0,0,210,30,'F');
+            doc.setTextColor(255); doc.setFontSize(16); doc.setFont("helvetica","bold");
+            doc.text("VIABILIDADE ECONÔMICA", 15, 20);
+
+            // Card Valor
+            let fy = 50;
+            doc.setFillColor(240, 253, 244); doc.setDrawColor(22, 163, 74);
+            doc.roundedRect(15, fy, 180, 35, 3, 3, 'FD');
+            doc.setTextColor(21, 128, 61); doc.setFontSize(16); doc.setFont("helvetica","bold");
+            doc.text(`INVESTIMENTO TOTAL: ${P.inv.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`, 25, fy+14);
+            doc.setTextColor(0); doc.setFontSize(10); doc.setFont("helvetica","normal");
+            doc.text(`Condições: ${P.pgto}`, 25, fy+24);
+
+            // Tabela
+            doc.autoTable({
+                startY: fy+45,
+                head: [['Indicador', 'Resultado']],
                 body: [
-                    ['Potência Instalada', `${P.kwp.toFixed(2)} kWp`],
-                    ['Módulos', `${P.placas}x ${P.painel}W`],
-                    ['Geração Mensal Média', `${P.geracaoMedia.toFixed(0)} kWh`],
-                    ['Consumo Suprido', `${P.consumo} kWh`]
+                    ['Economia 1º Ano', P.ecoAno.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})],
+                    ['Payback Estimado', '2.5 a 3.5 Anos'],
+                    ['Retorno em 25 Anos', (P.ecoAno*25).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})]
                 ],
-                theme:'grid', headStyles:{fillColor:dark}
+                theme:'striped', headStyles:{fillColor:gold}
             });
 
-            const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-            const dias = [31,28,31,30,31,30,31,31,30,31,30,31];
-            let rows = []; let total = 0;
-            meses.forEach((m, i) => {
-                let g = (P.kwp * P.hsp * dias[i] * 0.75);
-                rows.push([m, g.toFixed(0)+" kWh"]);
-                total += g;
-            });
-            rows.push(['TOTAL ANUAL', total.toFixed(0)+" kWh"]);
+            // GRÁFICO ROI (LINHA)
+            let ry = doc.lastAutoTable.finalY + 15;
+            doc.text("Fluxo de Caixa Acumulado (25 Anos)", 15, ry);
+            doc.addImage(imgROI, 'PNG', 15, ry+5, 180, 85);
 
-            doc.autoTable({
-                startY: doc.lastAutoTable.finalY+15,
-                head: [['Mês', 'Geração Estimada']],
-                body: rows,
-                theme:'striped', headStyles:{fillColor:[37,99,235]}
-            });
-
-            let Y = doc.lastAutoTable.finalY + 15;
-            if(Y > 240) { doc.addPage(); Y=20; }
-            doc.text("Análise Financeira", 15, Y);
-            doc.autoTable({
-                startY: Y+5,
-                head: [['Item', 'Valor']],
-                body: [
-                    ['Investimento', P.invest.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})],
-                    ['Economia Anual', P.economiaAnual.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})],
-                    ['Payback', '2.5 a 3.5 Anos']
-                ],
-                theme:'grid', headStyles:{fillColor:orange, textColor:255}
-            });
-
-            const pageHeight = doc.internal.pageSize.height;
-            doc.setFontSize(9); doc.setTextColor(100);
-            doc.text("Gerado via App SolarFlow Pro", 15, pageHeight-15);
+            // Footer Final
+            doc.setFontSize(8); doc.setTextColor(150);
+            doc.text("Gerado via App SolarFlow", 15, ph-15);
             doc.setTextColor(245, 158, 11);
-            doc.textWithLink("Desenvolvido por: SolarFlow Pro", 140, pageHeight-15, { url: 'https://solarflowpro.com.br/' });
+            doc.textWithLink("Desenvolvido por: SolarFlow Pro", 140, ph-15, {url:'https://solarflowpro.com.br/'});
             doc.setTextColor(100);
-            doc.text("Engenharia: (63) 98426-7870", 140, pageHeight-10);
+            doc.text("Engenharia: (63) 98426-7870", 140, ph-10);
 
-            doc.save(`Proposta_${P.cliente}.pdf`);
+            doc.save(`Proposta_${P.cli}.pdf`);
         }
 
-        // --- MENSAGEM ROBUSTA DE WHATSAPP ---
-        function enviarZap() {
+        // ZAP PRESTIGE
+        function enviarZapPlatinum() {
             let f = document.getElementById('fone').value.replace(/\D/g,'');
-            if(f.length <= 11) f = "55" + f;
-
-            let local = (P.cidade && P.cidade !== "Aguardando GPS...") ? `${P.cidade}/${P.uf}` : `${P.uf}`;
-
+            if(f.length<=11) f="55"+f;
+            let local = P.cid ? `${P.cid}/${P.uf}` : P.uf;
+            
             let msg = 
-`☀️ *PROJETO DE ENERGIA SOLAR* ☀️%0A` +
-`---------------------------------------%0A` +
-`👤 *Cliente:* ${P.cliente}%0A` +
-`📍 *Local:* ${local}%0A` +
-`---------------------------------------%0A` +
-`✅ *O QUE O SISTEMA ENTREGA:*%0A` +
-`⚡ Potência: *${P.kwp.toFixed(2)} kWp*%0A` +
-`📦 Módulos: *${P.placas}x ${P.painel}W*%0A` +
-`🔋 Geração Est.: *${P.geracaoMedia.toFixed(0)} kWh/mês*%0A` +
-`---------------------------------------%0A` +
-`💰 *IMPACTO FINANCEIRO:*%0A` +
-`📉 Redução na Conta: *até 95%*%0A` +
-`💵 Economia Anual: *${(P.economiaAnual).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*%0A` +
-`💵 Investimento Est.: *${(P.invest).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*%0A` +
-`---------------------------------------%0A` +
-`📄 *O PDF completo com gráfico de retorno segue anexo.*%0A` +
-`Vamos agendar a visita técnica? 🤝%0A` +
-`_Tecnologia: https://solarflowpro.com.br/`;
-
-            window.open(`https://wa.me/${f}?text=${msg}`);
+`☀️ *PROPOSTA COMERCIAL - ${C.nome.toUpperCase()}* ☀️\n` +
+`─────────────────────\n` +
+`👤 *Cliente:* ${P.cli}\n` +
+`📍 *Local:* ${local}\n` +
+`─────────────────────\n` +
+`🚀 *SISTEMA PROJETADO:*\n` +
+`▪️ Potência: *${P.kwp.toFixed(2)} kWp*\n` +
+`▪️ Geração: *${P.ger.toFixed(0)} kWh/mês*\n` +
+`▪️ Economia Anual: *${P.ecoAno.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*\n` +
+`─────────────────────\n` +
+`💎 *INVESTIMENTO:* ${P.inv.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}\n` +
+`📝 *Condições:* ${P.pgto}\n` +
+`─────────────────────\n` +
+`📄 *Baixe o PDF completo com análise gráfica.*`;
+            
+            window.open(`https://wa.me/${f}?text=${encodeURIComponent(msg)}`);
         }
 
         if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
