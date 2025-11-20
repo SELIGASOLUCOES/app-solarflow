@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SolarFlow App</title>
+    <meta name="theme-color" content="#2c3e50">
+    
+    <link rel="manifest" href="manifest.json">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Estilo Mobile-First (App Nativo) */
+        :root { --primary: #f39c12; --dark: #2c3e50; --light: #ecf0f1; --green: #27ae60; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--light);
+            margin: 0; padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Cabeçalho do App */
+        .app-header {
+            background-color: var(--dark);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .app-header h1 { margin: 0; font-size: 1.2rem; font-weight: 500; letter-spacing: 1px; }
+        .app-header i { color: var(--primary); }
+
+        /* Corpo */
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
+
+        /* Cards */
+        .card {
+            background: white; border-radius: 15px; padding: 20px;
+            margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        label { display: block; color: #7f8c8d; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; }
+        
+        /* Inputs Estilizados */
+        select, input {
+            width: 100%; padding: 12px; border: 1px solid #dfe6e9;
+            border-radius: 8px; font-size: 16px; background: #f9f9f9;
+            box-sizing: border-box; transition: 0.3s;
+        }
+        input:focus, select:focus { border-color: var(--primary); background: white; outline: none; }
+
+        /* Sliders (Range) */
+        .range-slider { width: 100%; margin: 10px 0; accent-color: var(--primary); }
+
+        /* Botão Principal */
+        .btn-action {
+            background: linear-gradient(135deg, var(--dark), #34495e);
+            color: white; width: 100%; padding: 16px; border: none;
+            border-radius: 10px; font-size: 1rem; font-weight: bold;
+            cursor: pointer; margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+        }
+        .btn-action:active { transform: scale(0.98); }
+
+        /* Resultados */
+        #resultados { display: none; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from {opacity: 0; transform: scale(0.9);} to {opacity: 1; transform: scale(1);} }
+
+        .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .res-item { background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #eee; }
+        .res-item small { display: block; color: #95a5a6; font-size: 0.7rem; text-transform: uppercase; }
+        .res-item strong { display: block; color: var(--dark); font-size: 1.1rem; margin-top: 5px; }
+
+        /* Botão WhatsApp */
+        .btn-zap {
+            background-color: var(--green); color: white; text-decoration: none;
+            padding: 15px; border-radius: 10px; display: flex; justify-content: center;
+            align-items: center; gap: 10px; font-weight: bold; margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        /* Assinatura */
+        .footer-legal {
+            text-align: center; font-size: 0.75rem; color: #b2bec3;
+            margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;
+        }
+        .footer-legal a { color: var(--primary); text-decoration: none; font-weight: bold; }
+
+        /* Offline Alert */
+        #offline-msg {
+            background: #e74c3c; color: white; text-align: center; padding: 5px;
+            font-size: 0.8rem; display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="offline-msg">Você está sem internet. O App continua funcionando! ⚡</div>
+
+    <div class="app-header">
+        <h1><i class="fas fa-solar-panel"></i> SolarFlow Pro</h1>
+    </div>
+
+    <div class="container">
+        
+        <div class="card">
+            <label><i class="fas fa-map-marker-alt"></i> Estado (HSP Médio)</label>
+            <select id="uf" onchange="autoHSP()">
+                <option value="">Selecione...</option>
+                <option value="5.2">Tocantins / Centro-Oeste (5.2)</option>
+                <option value="5.5">Nordeste (5.5)</option>
+                <option value="4.5">Sul / Sudeste (4.5)</option>
+                <option value="5.0">Média Nacional</option>
+            </select>
+            
+            <div style="margin-top: 15px;">
+                <label><i class="fas fa-layer-group"></i> Potência do Painel</label>
+                <select id="painel">
+                    <option value="550">550 W</option>
+                    <option value="575">575 W</option>
+                    <option value="600">600 W</option>
+                    <option value="450">450 W</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card">
+            <label><i class="fas fa-bolt"></i> Consumo Mensal (kWh)</label>
+            <input type="number" id="consumo" placeholder="Ex: 500" oninput="syncSlider(this.value)">
+            <input type="range" min="100" max="2000" step="50" class="range-slider" id="slider-consumo" oninput="syncInput(this.value)">
+            
+            <label style="margin-top:15px;"><i class="fas fa-money-bill-wave"></i> Tarifa de Energia (R$/kWh)</label>
+            <input type="number" id="tarifa" value="1.05" step="0.01">
+        </div>
+
+        <button class="btn-action" onclick="calcular()">DIMENSIONAR SISTEMA</button>
+
+        <div id="resultados" class="card">
+            <h3 style="text-align:center; margin-top:0; color:var(--dark);">Projeto Sugerido</h3>
+            
+            <div class="res-grid">
+                <div class="res-item">
+                    <small>Potência</small>
+                    <strong id="res-kwp">--</strong>
+                </div>
+                <div class="res-item">
+                    <small>Nº Placas</small>
+                    <strong id="res-placas">--</strong>
+                </div>
+                <div class="res-item">
+                    <small>Geração/Mês</small>
+                    <strong id="res-geracao">--</strong>
+                </div>
+                <div class="res-item">
+                    <small>Economia/Ano</small>
+                    <strong id="res-economia" style="color:var(--green);">--</strong>
+                </div>
+            </div>
+            
+            <div style="margin-top:15px; text-align:center; background:#fff3e0; padding:10px; border-radius:8px;">
+                <small>Área Estimada</small>
+                <strong id="res-area" style="color:var(--primary);">-- m²</strong>
+            </div>
+
+            <div style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px;">
+                <label>WhatsApp do Cliente:</label>
+                <input type="tel" id="fone-cliente" placeholder="DDD + Número">
+                <button class="btn-zap" onclick="enviarZap()">
+                    <i class="fab fa-whatsapp"></i> Enviar Proposta
+                </button>
+            </div>
+        </div>
+
+        <div class="footer-legal" id="assinatura-box">
+            <p>Desenvolvido para: <a href="https://solarflowpro.com.br/"
+                class="contact-link" id="link-protecao"><i class="fas fa-globe"></i> <strong>SolarFlow
+                    Pro</strong></a></p>
+            <p>Fone/Financeiro: <a href="https://wa.me/5563992568958"
+                class="contact-link">(63) 99256-8958</a></p>
+            </div>
+        <div id="attribution-key-lock" style="display:none;">solarflowpro.com.br</div>
+
+    </div>
+
+    <script>
+        // 1. Lógica de Slider e Sincronização
+        function syncSlider(val) { document.getElementById('slider-consumo').value = val; }
+        function syncInput(val) { document.getElementById('consumo').value = val; }
+        function autoHSP() { /* Lógica futura se quiser automatizar */ }
+
+        // 2. Variáveis Globais
+        let dados = {};
+
+        // 3. Cálculo Robusto
+        function calcular() {
+            // Segurança da Assinatura
+            const link = document.getElementById('link-protecao');
+            const key = document.getElementById('attribution-key-lock');
+            if(!link || !key || !link.href.includes('solarflowpro.com.br')) {
+                alert("Erro de licença: Assinatura removida."); return;
+            }
+
+            // Coleta
+            const hsp = parseFloat(document.getElementById('uf').value);
+            const painelW = parseInt(document.getElementById('painel').value);
+            const consumo = parseFloat(document.getElementById('consumo').value);
+            const tarifa = parseFloat(document.getElementById('tarifa').value);
+
+            if(!hsp || !consumo) { alert("Preencha Estado e Consumo."); return; }
+
+            // Engenharia
+            const pr = 0.75;
+            const energiaDia = (consumo / 30) * 1000;
+            const potSistema = energiaDia / (hsp * pr);
+            const qtdPlacas = Math.ceil(potSistema / painelW);
+            const potFinal = (qtdPlacas * painelW) / 1000;
+            const geracao = (potFinal * hsp * 30 * pr);
+            const economiaAnual = geracao * tarifa * 12;
+            const area = qtdPlacas * 2.2;
+
+            // Exibição
+            document.getElementById('res-kwp').innerText = potFinal.toFixed(2) + " kWp";
+            document.getElementById('res-placas').innerText = qtdPlacas + " un";
+            document.getElementById('res-geracao').innerText = geracao.toFixed(0) + " kWh";
+            document.getElementById('res-economia').innerText = "R$ " + economiaAnual.toLocaleString('pt-BR', {maximumFractionDigits:0});
+            document.getElementById('res-area').innerText = area.toFixed(1) + " m²";
+
+            // Salvar Dados
+            dados = {
+                consumo: consumo,
+                painel: painelW,
+                potencia: potFinal.toFixed(2),
+                placas: qtdPlacas,
+                geracao: geracao.toFixed(0),
+                economia: economiaAnual.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})
+            };
+
+            document.getElementById('resultados').style.display = 'block';
+            
+            // Scroll suave para o resultado
+            document.getElementById('resultados').scrollIntoView({behavior: 'smooth'});
+        }
+
+        // 4. Envio WhatsApp
+        function enviarZap() {
+            let fone = document.getElementById('fone-cliente').value.replace(/\D/g,'');
+            if(fone.length < 10) { alert("Digite o WhatsApp com DDD"); return; }
+            if(fone.length <= 11) fone = "55" + fone;
+
+            const msg = 
+`☀️ *Proposta SolarFlow Pro* ☀️
+---------------------------
+📊 Consumo: ${dados.consumo} kWh
+⚙️ Painel: ${dados.painel}W
+
+✅ *SISTEMA DIMENSIONADO:*
+👉 Potência: ${dados.potencia} kWp
+👉 Placas: ${dados.placas} unidades
+👉 Geração: ${dados.geracao} kWh/mês
+💰 *Economia Est.: ${dados.economia}/ano*
+---------------------------
+Simulação via App SolarFlow Pro
+https://solarflowpro.com.br`;
+
+            window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        // 5. Registro do Service Worker (PWA)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('App Instalado/Offline Pronto'))
+                    .catch(err => console.log('Erro SW:', err));
+            });
+        }
+
+        // Detectar Offline
+        window.addEventListener('offline', () => document.getElementById('offline-msg').style.display = 'block');
+        window.addEventListener('online', () => document.getElementById('offline-msg').style.display = 'none');
+    </script>
+</body>
+</html>
