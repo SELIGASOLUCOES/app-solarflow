@@ -3,456 +3,387 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SolarFlow Pro</title>
-    <meta name="theme-color" content="#2c3e50">
-    <meta name="description" content="Dimensionamento Solar Fotovoltaico Profissional">
-    
+    <title>SolarFlow Business v13</title>
+    <meta name="theme-color" content="#0f172a">
     <link rel="manifest" href="manifest.json">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        :root { 
-            --primary: #f39c12; 
-            --primary-dark: #d35400;
-            --secondary: #2c3e50; 
-            --bg: #f4f7f6; 
-            --surface: #ffffff;
-            --success: #27ae60;
-        }
+        :root { --bg: #0f172a; --card: #1e293b; --primary: #f59e0b; --text: #f8fafc; --muted: #94a3b8; }
+        body { font-family: 'Manrope', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; }
+
+        .app-header { background: rgba(15,23,42,0.95); padding: 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); }
+        .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; }
         
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            margin: 0; padding: 0;
-            -webkit-tap-highlight-color: transparent;
-            padding-bottom: 90px; /* Espaço para scroll */
-            color: var(--secondary);
-        }
+        .stepper { display: flex; justify-content: center; padding: 15px 0; gap: 10px; }
+        .step-bar { width: 30px; height: 4px; background: #334155; border-radius: 2px; transition: 0.4s; }
+        .step-bar.active { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
 
-        /* Header Fixo */
-        .app-header {
-            background: linear-gradient(135deg, var(--secondary) 0%, #1a252f 100%);
-            color: white;
-            padding: 20px 15px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            position: sticky; top: 0; z-index: 1000;
-        }
-        .app-header h1 { margin: 0; font-size: 1.4rem; font-weight: 600; letter-spacing: 0.5px; }
-        .app-header p { margin: 5px 0 0 0; font-size: 0.8rem; opacity: 0.8; }
+        .screen { display: none; max-width: 500px; margin: 0 auto; padding: 0 20px; animation: fadeUp 0.4s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeUp { from {opacity:0; transform:translateY(15px);} to {opacity:1; transform:translateY(0);} }
 
-        /* Container */
-        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+        .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #334155; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 10px; color: var(--primary); }
+        .card-header h3 { margin: 0; font-size: 1rem; color: var(--text); }
 
-        /* Cartões (Cards) */
-        .card {
-            background: var(--surface);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border: 1px solid rgba(0,0,0,0.03);
-        }
+        label { display: block; font-size: 0.7rem; color: var(--muted); margin-bottom: 5px; font-weight: 700; text-transform: uppercase; }
+        input, select { width: 100%; padding: 14px; background: #020617; border: 1px solid #334155; border-radius: 10px; color: white; font-size: 1rem; box-sizing: border-box; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--primary); outline: none; }
 
-        .section-title {
-            font-size: 0.85rem;
-            color: #7f8c8d;
-            text-transform: uppercase;
-            font-weight: 700;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--primary);
-            padding-left: 10px;
-        }
-
-        /* Inputs */
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; color: var(--secondary); }
+        .btn-gps { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); position: relative; overflow: hidden; }
+        .btn-gps.loading { opacity: 0.8; pointer-events: none; }
         
-        select, input {
-            width: 100%; padding: 14px; border: 1px solid #dde1e7;
-            border-radius: 10px; font-size: 16px; background: #fdfdfd;
-            box-sizing: border-box; transition: all 0.3s; appearance: none;
-        }
-        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.15); outline: none; }
+        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: #0f172a; }
+        .btn-outline { background: transparent; border: 1px solid #475569; color: var(--muted); }
+        .btn-pdf { background: #ef4444; color: white; }
+        .btn-zap { background: #22c55e; color: white; }
 
-        /* Botão Calcular */
-        .btn-calc {
-            background: linear-gradient(to right, var(--primary), var(--primary-dark));
-            color: white; width: 100%; padding: 18px; border: none;
-            border-radius: 12px; font-size: 1.1rem; font-weight: bold;
-            cursor: pointer; margin-top: 10px;
-            box-shadow: 0 8px 20px rgba(243, 156, 18, 0.3);
-            transition: transform 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-        }
-        .btn-calc:active { transform: scale(0.98); }
-
-        /* Resultados */
-        #results-area { display: none; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
-
-        .grid-results { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .dash-item { background: #0f172a; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #334155; }
+        .dash-item small { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; display: block; }
+        .dash-item big { font-size: 1.2rem; color: var(--text); font-weight: 800; display: block; margin-top: 5px; }
         
-        .res-box {
-            background: #f8f9fa; padding: 15px; border-radius: 12px; text-align: center;
-            border: 1px solid #e9ecef;
-        }
-        .res-box span { font-size: 0.75rem; color: #95a5a6; font-weight: bold; text-transform: uppercase; display: block; }
-        .res-box strong { font-size: 1.25rem; color: var(--secondary); display: block; margin-top: 5px; }
-        
-        .highlight-box { background: #e8f5e9; border-color: #c8e6c9; }
-        .highlight-box strong { color: var(--success); }
-
-        /* Gráfico */
-        .chart-wrapper { position: relative; height: 260px; width: 100%; margin-top: 10px; }
-
-        /* WhatsApp e Assinatura */
-        .whatsapp-section { margin-top: 25px; padding-top: 20px; border-top: 1px dashed #ccc; }
-        
-        .btn-whatsapp {
-            background-color: var(--success); color: white; text-decoration: none;
-            padding: 16px; border-radius: 12px; display: flex; justify-content: center;
-            align-items: center; gap: 10px; font-weight: bold; margin-top: 15px;
-            font-size: 1rem; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
-        }
-
-        .footer-legal { text-align: center; font-size: 0.75rem; color: #bdc3c7; margin-top: 40px; padding-bottom: 10px; }
-        .footer-legal a { color: var(--primary); text-decoration: none; font-weight: bold; }
+        .footer-brand { text-align: center; margin-top: 30px; font-size: 0.7rem; color: #475569; }
+        .footer-brand a { color: var(--primary); text-decoration: none; }
     </style>
 </head>
 <body>
 
     <div class="app-header">
-        <h1><i class="fas fa-sun"></i> SolarFlow Pro</h1>
-        <p>Dimensionamento Fotovoltaico</p>
+        <div class="brand"><h1>SolarFlow <span>Business</span></h1></div>
+        <div style="font-size:0.8rem; color:var(--muted);">v13.0</div>
     </div>
 
-    <div class="container">
-        
+    <div class="stepper">
+        <div class="step-bar active" id="sb1"></div>
+        <div class="step-bar" id="sb2"></div>
+        <div class="step-bar" id="sb3"></div>
+    </div>
+
+    <div class="screen active" id="t1">
         <div class="card">
-            <div class="section-title">1. Dados do Local</div>
-            <div class="input-group">
-                <label>Estado (UF):</label>
-                <select id="uf" onchange="atualizarHSP()">
-                    <option value="">Selecione o Estado...</option>
-                    </select>
-            </div>
+            <div class="card-header"><i class="fas fa-map-marker-alt"></i><h3>Localização</h3></div>
             
-            <div class="grid-results" style="margin-bottom:0;">
-                <div class="input-group">
-                    <label>HSP (Solar):</label>
+            <button class="btn-gps" id="btnGps" onclick="ativarGPS()">
+                <i class="fas fa-satellite"></i> Detectar Cidade e HSP
+            </button>
+
+            <div style="margin-bottom: 15px;">
+                <label>Cidade:</label>
+                <input type="text" id="cidadeInput" placeholder="Aguardando GPS...">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label>Estado</label>
+                    <select id="uf" onchange="setManual()">
+                        <option value="">UF...</option>
+                    </select>
+                </div>
+                <div>
+                    <label>HSP (NASA)</label>
                     <input type="number" id="hsp" step="0.1" placeholder="Auto">
                 </div>
-                <div class="input-group">
-                    <label>Tarifa (R$):</label>
-                    <input type="number" id="tarifa" step="0.01" value="1.05">
-                </div>
             </div>
         </div>
 
         <div class="card">
-            <div class="section-title">2. Dimensionamento</div>
-            <div class="input-group">
-                <label>Potência do Módulo (W):</label>
-                <select id="painel">
-                    <option value="550" selected>550 W (Padrão Mercado)</option>
-                    <option value="575">575 W (N-Type)</option>
-                    <option value="600">600 W (Alta Potência)</option>
-                    <option value="450">450 W</option>
-                    <option value="340">340 W (Antigo)</option>
-                </select>
-            </div>
+            <label>Nome do Cliente</label>
+            <input type="text" id="cliente" placeholder="Ex: João Silva">
+            <label style="margin-top:10px;">Tarifa de Energia (R$)</label>
+            <input type="number" id="tarifa" value="1.05" step="0.01">
+        </div>
 
-            <div class="input-group">
-                <label>Média de Consumo Mensal (kWh):</label>
-                <input type="number" id="consumo" placeholder="Ex: 500" inputmode="numeric">
-            </div>
+        <button class="btn btn-primary" onclick="nav(2)">Próximo <i class="fas fa-arrow-right"></i></button>
+    </div>
+
+    <div class="screen" id="t2">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-bolt"></i><h3>Engenharia</h3></div>
             
-            <div class="input-group">
-                <label>Custo Estimado do Kit + Instalação (R$):</label>
-                <input type="number" id="investimento" placeholder="Se vazio, será estimado autom." inputmode="numeric">
+            <label>Consumo Médio (kWh/mês)</label>
+            <input type="number" id="consumo" placeholder="Ex: 600" inputmode="numeric">
+
+            <label style="margin-top:15px;">Potência do Módulo (W)</label>
+            <select id="painel">
+                <option value="550">550 W (Padrão)</option>
+                <option value="575">575 W (N-Type)</option>
+                <option value="600">600 W (Alta Potência)</option>
+                <option value="450">450 W</option>
+            </select>
+
+            <label style="margin-top:15px;">Investimento (R$)</label>
+            <input type="number" id="investimento" placeholder="Vazio = Estimativa Automática">
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-outline" onclick="nav(1)">Voltar</button>
+            <button class="btn btn-primary" onclick="calcular()">Calcular</button>
+        </div>
+    </div>
+
+    <div class="screen" id="t3">
+        <div class="dash-grid">
+            <div class="dash-item">
+                <small>Potência</small>
+                <big id="res-kwp">--</big>
+            </div>
+            <div class="dash-item">
+                <small>Placas</small>
+                <big id="res-placas">--</big>
+            </div>
+            <div class="dash-item">
+                <small>Geração Mês</small>
+                <big id="res-geracao">--</big>
+            </div>
+            <div class="dash-item" style="border:1px solid var(--primary);">
+                <small style="color:var(--primary)">Economia Anual</small>
+                <big id="res-economia" style="color:var(--primary)">--</big>
             </div>
         </div>
 
-        <button class="btn-calc" onclick="calcularProjeto()">
-            <i class="fas fa-bolt"></i> CALCULAR SISTEMA
-        </button>
-
-        <div id="results-area" class="card">
-            <h3 style="text-align:center; color:var(--secondary); margin: 0 0 20px 0;">Resultado do Estudo</h3>
-            
-            <div class="grid-results">
-                <div class="res-box">
-                    <span>Potência Necessária</span>
-                    <strong id="res-kwp">-- kWp</strong>
-                </div>
-                <div class="res-box">
-                    <span>Inversor Sugerido</span>
-                    <strong id="res-inversor" style="font-size:1rem; color:var(--primary-dark);">--</strong>
-                </div>
-                <div class="res-box">
-                    <span>Nº de Placas</span>
-                    <strong id="res-placas">--</strong>
-                </div>
-                <div class="res-box">
-                    <span>Geração Mensal</span>
-                    <strong id="res-geracao">-- kWh</strong>
-                </div>
-            </div>
-
-            <div class="res-box highlight-box" style="margin-bottom: 20px;">
-                <span>Economia Anual Estimada</span>
-                <strong id="res-economia" style="font-size: 1.5rem;">R$ --</strong>
-            </div>
-
-            <div class="chart-wrapper">
-                <canvas id="graficoRetorno"></canvas>
-            </div>
-
-            <div class="whatsapp-section">
-                <label>WhatsApp do Cliente (com DDD):</label>
-                <input type="tel" id="fone-cliente" placeholder="Ex: 63 99200-0000">
-                <button class="btn-whatsapp" onclick="enviarProposta()">
-                    <i class="fab fa-whatsapp"></i> Enviar Proposta PDF/Texto
-                </button>
-            </div>
+        <div class="card" style="margin-top:15px; padding:10px;">
+            <canvas id="chartROI" height="200"></canvas>
         </div>
 
-        <div class="footer-legal" id="assinatura-container">
-            <p>Tecnologia desenvolvida para: <br>
-            <a href="https://solarflowpro.com.br/" class="contact-link" id="link-auth">
-                <i class="fas fa-globe"></i> <strong>SolarFlow Pro</strong>
-            </a></p>
-            <p style="margin-top:5px;">Engenharia: (63) 98426-7870</p>
-            </div>
-        <div id="attribution-key-lock" style="display:none;">solarflowpro.com.br</div>
+        <div class="card">
+            <label>WhatsApp do Cliente</label>
+            <input type="tel" id="fone" placeholder="(XX) 9XXXX-XXXX">
+            
+            <button class="btn btn-pdf" onclick="gerarRelatorioPDF()">
+                <i class="fas fa-file-pdf"></i> Baixar Relatório PDF
+            </button>
+            <button class="btn btn-zap" onclick="enviarZap()">
+                <i class="fab fa-whatsapp"></i> Enviar Proposta Profissional
+            </button>
+            <button class="btn btn-outline" onclick="nav(1)">Novo Projeto</button>
+        </div>
 
+        <div class="footer-brand" id="signature-block">
+            App Licenciado: <a href="https://solarflowpro.com.br/" id="auth-link">SolarFlow Pro</a>
+            <div id="secret-key" style="display:none;">solarflowpro.com.br</div>
+        </div>
     </div>
 
     <script>
-        // --- DADOS: Banco de HSP dos Estados (Média Capital/Interior) ---
-        const hspBrasil = {
-            "AC": 4.5, "AL": 5.3, "AP": 5.1, "AM": 4.6, "BA": 5.5, "CE": 5.7, "DF": 5.3,
-            "ES": 5.1, "GO": 5.3, "MA": 5.2, "MT": 5.1, "MS": 5.1, "MG": 5.2, "PA": 4.9,
-            "PB": 5.6, "PR": 4.4, "PE": 5.5, "PI": 5.7, "RJ": 4.9, "RN": 5.8, "RS": 4.3,
-            "RO": 4.7, "RR": 4.9, "SC": 4.1, "SP": 4.7, "SE": 5.3, "TO": 5.3
+        // DADOS
+        const mapaEstados = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
+        const dbHSP = {"AC":4.5,"AL":5.3,"AP":5.1,"AM":4.6,"BA":5.5,"CE":5.7,"DF":5.3,"ES":5.1,"GO":5.3,"MA":5.2,"MT":5.1,"MS":5.1,"MG":5.2,"PA":4.9,"PB":5.6,"PR":4.4,"PE":5.5,"PI":5.7,"RJ":4.9,"RN":5.8,"RS":4.3,"RO":4.7,"RR":4.9,"SC":4.1,"SP":4.7,"SE":5.3,"TO":5.3};
+        let P = { lat: 0, lon: 0, fonte: "Manual" };
+        let chart = null;
+
+        window.onload = () => {
+            const s = document.getElementById('uf');
+            Object.keys(dbHSP).sort().forEach(u => { let o = document.createElement('option'); o.value=u; o.text=u; s.add(o); });
         };
 
-        // Dados Globais para Envio
-        let dadosProjeto = {};
-        let chartInstance = null;
-
-        // --- INICIALIZAÇÃO ---
-        window.onload = function() {
-            carregarEstados();
-            carregarCache(); // Carrega dados salvos da última vez
-        };
-
-        function carregarEstados() {
-            const select = document.getElementById('uf');
-            // Ordena estados alfabeticamente
-            const estados = Object.keys(hspBrasil).sort();
-            estados.forEach(uf => {
-                let option = document.createElement('option');
-                option.value = uf;
-                option.text = uf + " - HSP " + hspBrasil[uf];
-                select.appendChild(option);
-            });
+        function nav(n) {
+            document.querySelectorAll('.screen').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.step-bar').forEach(x => x.classList.remove('active'));
+            document.getElementById('t'+n).classList.add('active');
+            for(let i=1; i<=n; i++) document.getElementById('sb'+i).classList.add('active');
         }
 
-        function atualizarHSP() {
-            const uf = document.getElementById('uf').value;
-            if(uf && hspBrasil[uf]) {
-                document.getElementById('hsp').value = hspBrasil[uf];
-            }
-            salvarCache();
-        }
-
-        // --- FUNÇÕES DE MEMÓRIA (LOCALSTORAGE) ---
-        function salvarCache() {
-            localStorage.setItem('sf_uf', document.getElementById('uf').value);
-            localStorage.setItem('sf_hsp', document.getElementById('hsp').value);
-            localStorage.setItem('sf_tarifa', document.getElementById('tarifa').value);
-            localStorage.setItem('sf_painel', document.getElementById('painel').value);
-        }
-
-        function carregarCache() {
-            if(localStorage.getItem('sf_uf')) {
-                document.getElementById('uf').value = localStorage.getItem('sf_uf');
-                // Dispara atualização do HSP se tiver estado salvo
-                if(localStorage.getItem('sf_hsp')) document.getElementById('hsp').value = localStorage.getItem('sf_hsp');
-            }
-            if(localStorage.getItem('sf_tarifa')) document.getElementById('tarifa').value = localStorage.getItem('sf_tarifa');
-            if(localStorage.getItem('sf_painel')) document.getElementById('painel').value = localStorage.getItem('sf_painel');
-        }
-
-        // --- CÁLCULO PRINCIPAL ---
-        function calcularProjeto() {
-            // 1. Segurança de Assinatura
-            const linkAuth = document.getElementById('link-auth');
-            const keyAuth = document.getElementById('attribution-key-lock');
+        // GPS
+        function ativarGPS() {
+            const btn = document.getElementById('btnGps');
+            btn.classList.add('loading');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando Satélite...';
             
-            if(!linkAuth || !keyAuth || !linkAuth.href.includes('solarflowpro.com.br')) {
-                alert("ERRO DE VALIDAÇÃO: A assinatura SolarFlow Pro foi corrompida. Restaure o código original.");
-                return;
-            }
+            if(!navigator.geolocation) { alert("GPS bloqueado."); btn.innerHTML='Tentar Novamente'; btn.classList.remove('loading'); return; }
 
-            // 2. Coleta de Dados
-            salvarCache(); // Salva preferências antes de calcular
-            const hsp = parseFloat(document.getElementById('hsp').value);
-            const modW = parseInt(document.getElementById('painel').value);
-            const consumo = parseFloat(document.getElementById('consumo').value);
-            const tarifa = parseFloat(document.getElementById('tarifa').value);
-            let custoKit = parseFloat(document.getElementById('investimento').value);
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                P.lat = pos.coords.latitude;
+                P.lon = pos.coords.longitude;
+                P.fonte = "Satélite/NASA";
 
-            if(!consumo || !hsp) {
-                alert("Por favor, informe o Estado e o Consumo Mensal.");
-                return;
-            }
+                try {
+                    const resGeo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${P.lat}&lon=${P.lon}`);
+                    const dataGeo = await resGeo.json();
+                    const city = dataGeo.address.city || dataGeo.address.town || dataGeo.address.village || dataGeo.address.municipality || "";
+                    document.getElementById('cidadeInput').value = city;
+                    const ufSigla = mapaEstados[dataGeo.address.state] || "TO";
+                    document.getElementById('uf').value = ufSigla;
+                } catch(e) { console.log("Erro Geo"); }
 
-            // 3. Engenharia Reversa
-            const PR = 0.75; // Performance Ratio (Perdas totais de 25%)
-            
-            // Energia Diária Necessária
-            const energiaDia = (consumo / 30) * 1000; // Wh/dia
-            
-            // Potência do Gerador (Wp)
-            const potGeradorW = energiaDia / (hsp * PR);
-            
-            // Número de Módulos (Arredondar para Cima)
-            const qtdModulos = Math.ceil(potGeradorW / modW);
-            
-            // Potência Real Instalada (kWp)
-            const potInstaladaKWp = (qtdModulos * modW) / 1000;
-
-            // Sugestão de Inversor (Lógica Simples de Overload 20-30%)
-            // Se deu 4kWp de placa, um inversor de 3kW aguenta.
-            let inversorSugerido = "";
-            if(potInstaladaKWp <= 3.3) inversorSugerido = "3 kW (Mono)";
-            else if(potInstaladaKWp <= 4.4) inversorSugerido = "4 kW (Mono)";
-            else if(potInstaladaKWp <= 5.5) inversorSugerido = "5 kW (Mono)";
-            else if(potInstaladaKWp <= 6.6) inversorSugerido = "6 kW (Mono)";
-            else if(potInstaladaKWp <= 8.8) inversorSugerido = "8 kW (Tri/Mono)";
-            else if(potInstaladaKWp <= 11) inversorSugerido = "10 kW (Trifásico)";
-            else inversorSugerido = Math.ceil(potInstaladaKWp * 0.85) + " kW";
-
-            // Estimativa de Investimento (se vazio) - R$ 2.800/kWp (Média mercado atual)
-            if(!custoKit) {
-                custoKit = potInstaladaKWp * 2800;
-                if(custoKit < 6000) custoKit = 6000; // Mínimo viável
-                document.getElementById('investimento').value = custoKit.toFixed(0);
-            }
-
-            // Geração Mensal Média Estimada
-            const geracaoMensal = (potInstaladaKWp * hsp * 30 * PR);
-            
-            // Economia Financeira
-            const economiaAnual = geracaoMensal * tarifa * 12;
-
-            // 4. Exibição na Tela
-            document.getElementById('res-kwp').innerText = potInstaladaKWp.toFixed(2) + " kWp";
-            document.getElementById('res-placas').innerText = qtdModulos + " un (" + modW + "W)";
-            document.getElementById('res-inversor').innerText = inversorSugerido;
-            document.getElementById('res-geracao').innerText = geracaoMensal.toFixed(0) + " kWh";
-            document.getElementById('res-economia').innerText = economiaAnual.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-
-            document.getElementById('results-area').style.display = 'block';
-            
-            // Scroll suave
-            document.getElementById('results-area').scrollIntoView({behavior: 'smooth'});
-
-            // 5. Gerar Gráfico de Payback
-            renderizarGrafico(custoKit, economiaAnual);
-
-            // 6. Preparar Dados para Envio
-            dadosProjeto = {
-                uf: document.getElementById('uf').value,
-                consumo: consumo,
-                potencia: potInstaladaKWp.toFixed(2),
-                placas: qtdModulos,
-                modulo: modW,
-                geracao: geracaoMensal.toFixed(0),
-                economia: economiaAnual.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}),
-                investimento: custoKit.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}),
-                inversor: inversorSugerido
-            };
-        }
-
-        function renderizarGrafico(investimento, economiaAnual) {
-            const ctx = document.getElementById('graficoRetorno').getContext('2d');
-            if(chartInstance) chartInstance.destroy();
-
-            let labels = [];
-            let data = [];
-            let saldo = -investimento;
-            const inflacao = 1.06; // Aumento energia 6% a.a.
-
-            for(let i = 0; i <= 10; i++) {
-                labels.push("Ano " + i);
-                data.push(saldo);
-                saldo += (economiaAnual * Math.pow(inflacao, i));
-            }
-
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Retorno Financeiro (R$)',
-                        data: data,
-                        borderColor: '#27ae60',
-                        backgroundColor: 'rgba(39, 174, 96, 0.15)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: {display: false} },
-                    scales: { 
-                        x: { grid: {display: false} },
-                        y: { ticks: { callback: function(value){ return 'R$ ' + value/1000 + 'k'; } } }
-                    }
+                try {
+                    const resNasa = await fetch(`https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=ALLSKY_SFC_SW_DWN&community=RE&longitude=${P.lon}&latitude=${P.lat}&format=JSON`);
+                    const dataNasa = await resNasa.json();
+                    const hsp = dataNasa.properties.parameter.ALLSKY_SFC_SW_DWN.ANN;
+                    document.getElementById('hsp').value = hsp.toFixed(2);
+                    btn.classList.remove('loading');
+                    btn.style.background = "#22c55e";
+                    btn.innerHTML = `<i class="fas fa-check-circle"></i> Sucesso: ${hsp.toFixed(2)} HSP`;
+                } catch(e) {
+                    alert("Erro NASA."); btn.innerHTML = 'Tentar Manual'; btn.classList.remove('loading');
                 }
+            }, () => { alert("Erro GPS."); btn.innerHTML = 'Tentar Manual'; btn.classList.remove('loading'); });
+        }
+
+        function setManual() {
+            let u = document.getElementById('uf').value;
+            if(dbHSP[u]) { document.getElementById('hsp').value = dbHSP[u]; P.fonte = "Manual"; }
+        }
+
+        // CALCULO
+        function calcular() {
+            const key = document.getElementById('secret-key');
+            const link = document.getElementById('auth-link');
+            if(!key || !link || !link.href.includes('solarflowpro.com.br')) { alert("Erro Assinatura"); return; }
+
+            P.cliente = document.getElementById('cliente').value || "Cliente";
+            P.cidade = document.getElementById('cidadeInput').value || "Local";
+            P.uf = document.getElementById('uf').value || "";
+            P.consumo = parseFloat(document.getElementById('consumo').value);
+            P.hsp = parseFloat(document.getElementById('hsp').value);
+            P.painel = parseInt(document.getElementById('painel').value);
+            P.tarifa = parseFloat(document.getElementById('tarifa').value);
+            let inv = parseFloat(document.getElementById('investimento').value);
+
+            if(!P.consumo || !P.hsp) { alert("Preencha dados."); return; }
+
+            const PR = 0.75;
+            const energiaDia = (P.consumo / 30) * 1000;
+            const potW = energiaDia / (P.hsp * PR);
+            P.placas = Math.ceil(potW / P.painel);
+            P.kwp = (P.placas * P.painel) / 1000;
+            P.geracaoMedia = P.kwp * P.hsp * 30 * PR;
+            P.economiaAnual = P.geracaoMedia * P.tarifa * 12;
+            P.invest = inv ? inv : (P.kwp * 2900 < 5000 ? 5000 : P.kwp * 2900);
+            P.geracaoAnualTotal = P.geracaoMedia * 12;
+
+            document.getElementById('res-kwp').innerText = P.kwp.toFixed(2) + " kWp";
+            document.getElementById('res-placas').innerText = P.placas + " un";
+            document.getElementById('res-geracao').innerText = P.geracaoMedia.toFixed(0) + " kWh";
+            document.getElementById('res-economia').innerText = (P.economiaAnual).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+
+            nav(3);
+            renderChart();
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('chartROI').getContext('2d');
+            if(chart) chart.destroy();
+            let d=[], l=[], s=-P.invest;
+            for(let i=0; i<=10; i++) { l.push(i); d.push(s); s+=(P.economiaAnual*Math.pow(1.06,i)); }
+            chart = new Chart(ctx, {
+                type:'line', data:{labels:l, datasets:[{label:'Retorno R$', data:d, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.1)', fill:true}]},
+                options:{plugins:{legend:{display:false}}, scales:{x:{grid:{color:'#334155'}}, y:{grid:{color:'#334155'}}}}
             });
         }
 
-        function enviarProposta() {
-            let fone = document.getElementById('fone-cliente').value.replace(/\D/g,'');
-            if(fone.length < 10) { alert("Digite o telefone com DDD."); return; }
-            if(fone.length <= 11) fone = "55" + fone;
+        function gerarRelatorioPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const orange = [245, 158, 11];
+            const dark = [15, 23, 42];
 
-            const msg = 
-`☀️ *SOLARFLOW PRO - PROPOSTA TÉCNICA* ☀️
-------------------------------------
-📍 Local: ${dadosProjeto.uf}
-⚡ Consumo Ref: ${dadosProjeto.consumo} kWh
+            doc.setFillColor(...dark); doc.rect(0,0,210,40,'F');
+            doc.setTextColor(255); doc.setFontSize(22); doc.setFont("helvetica","bold");
+            doc.text("ESTUDO DE VIABILIDADE", 15, 20);
+            doc.setFontSize(10); doc.setFont("helvetica","normal");
+            doc.text("SolarFlow Engineering - Proposta Técnica", 15, 28);
+            doc.text(`Data: ${new Date().toLocaleDateString()}`, 160, 20);
 
-✅ *SISTEMA DIMENSIONADO:*
-👉 Potência: ${dadosProjeto.potencia} kWp
-👉 Placas: ${dadosProjeto.placas}x ${dadosProjeto.modulo}W
-👉 Inversor: ${dadosProjeto.inversor}
-👉 Geração: ${dadosProjeto.geracao} kWh/mês
+            doc.setTextColor(0); doc.setFontSize(12);
+            doc.text(`Cliente: ${P.cliente}`, 15, 55);
+            let localTexto = (P.cidade && P.cidade !== "Aguardando GPS...") ? `${P.cidade} - ${P.uf}` : `Estado: ${P.uf}`;
+            doc.text(`Local: ${localTexto}`, 15, 62);
+            doc.setFontSize(10); doc.setTextColor(100);
+            doc.text(`Fonte: ${P.fonte} | HSP: ${P.hsp.toFixed(2)}`, 15, 68);
 
-💰 *ANÁLISE FINANCEIRA:*
-Investimento: ${dadosProjeto.investimento}
-Economia: ${dadosProjeto.economia} / ano
-------------------------------------
-_Simulação digital gerada por SolarFlow Pro_
-https://solarflowpro.com.br`;
+            doc.autoTable({
+                startY: 75,
+                head: [['Parâmetro', 'Resultado']],
+                body: [
+                    ['Potência Instalada', `${P.kwp.toFixed(2)} kWp`],
+                    ['Módulos', `${P.placas}x ${P.painel}W`],
+                    ['Geração Mensal Média', `${P.geracaoMedia.toFixed(0)} kWh`],
+                    ['Consumo Suprido', `${P.consumo} kWh`]
+                ],
+                theme:'grid', headStyles:{fillColor:dark}
+            });
 
-            window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`, '_blank');
+            const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+            const dias = [31,28,31,30,31,30,31,31,30,31,30,31];
+            let rows = []; let total = 0;
+            meses.forEach((m, i) => {
+                let g = (P.kwp * P.hsp * dias[i] * 0.75);
+                rows.push([m, g.toFixed(0)+" kWh"]);
+                total += g;
+            });
+            rows.push(['TOTAL ANUAL', total.toFixed(0)+" kWh"]);
+
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY+15,
+                head: [['Mês', 'Geração Estimada']],
+                body: rows,
+                theme:'striped', headStyles:{fillColor:[37,99,235]}
+            });
+
+            let Y = doc.lastAutoTable.finalY + 15;
+            if(Y > 240) { doc.addPage(); Y=20; }
+            doc.text("Análise Financeira", 15, Y);
+            doc.autoTable({
+                startY: Y+5,
+                head: [['Item', 'Valor']],
+                body: [
+                    ['Investimento', P.invest.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})],
+                    ['Economia Anual', P.economiaAnual.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})],
+                    ['Payback', '2.5 a 3.5 Anos']
+                ],
+                theme:'grid', headStyles:{fillColor:orange, textColor:255}
+            });
+
+            const pageHeight = doc.internal.pageSize.height;
+            doc.setFontSize(9); doc.setTextColor(100);
+            doc.text("Gerado via App SolarFlow Pro", 15, pageHeight-15);
+            doc.setTextColor(245, 158, 11);
+            doc.textWithLink("Desenvolvido por: SolarFlow Pro", 140, pageHeight-15, { url: 'https://solarflowpro.com.br/' });
+            doc.setTextColor(100);
+            doc.text("Engenharia: (63) 98426-7870", 140, pageHeight-10);
+
+            doc.save(`Proposta_${P.cliente}.pdf`);
         }
 
-        // Registrar PWA
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-            .then(() => console.log("App Robusto Pronto"));
+        // --- MENSAGEM ROBUSTA DE WHATSAPP ---
+        function enviarZap() {
+            let f = document.getElementById('fone').value.replace(/\D/g,'');
+            if(f.length <= 11) f = "55" + f;
+
+            let local = (P.cidade && P.cidade !== "Aguardando GPS...") ? `${P.cidade}/${P.uf}` : `${P.uf}`;
+
+            let msg = 
+`☀️ *PROJETO DE ENERGIA SOLAR* ☀️%0A` +
+`---------------------------------------%0A` +
+`👤 *Cliente:* ${P.cliente}%0A` +
+`📍 *Local:* ${local}%0A` +
+`---------------------------------------%0A` +
+`✅ *O QUE O SISTEMA ENTREGA:*%0A` +
+`⚡ Potência: *${P.kwp.toFixed(2)} kWp*%0A` +
+`📦 Módulos: *${P.placas}x ${P.painel}W*%0A` +
+`🔋 Geração Est.: *${P.geracaoMedia.toFixed(0)} kWh/mês*%0A` +
+`---------------------------------------%0A` +
+`💰 *IMPACTO FINANCEIRO:*%0A` +
+`📉 Redução na Conta: *até 95%*%0A` +
+`💵 Economia Anual: *${(P.economiaAnual).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*%0A` +
+`💵 Investimento Est.: *${(P.invest).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}*%0A` +
+`---------------------------------------%0A` +
+`📄 *O PDF completo com gráfico de retorno segue anexo.*%0A` +
+`Vamos agendar a visita técnica? 🤝%0A` +
+`_Tecnologia: https://solarflowpro.com.br/`;
+
+            window.open(`https://wa.me/${f}?text=${msg}`);
         }
+
+        if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
     </script>
 </body>
 </html>
